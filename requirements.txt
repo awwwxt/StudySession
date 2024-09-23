@@ -1,0 +1,12 @@
+aiogram==3.10.0
+telethon
+openpyxl>=3.1.5
+aiosqlite>=0.20.0
+sqlalchemy>=2.0.31
+bs4
+lxml>=5.1.0
+xlrd
+uvloop
+loguru
+fake_useragent
+pillow
