@@ -43,7 +43,6 @@ class Updater:
                     executor.submit(XLS2XLSX(file).to_xlsx, f"{file}x")
         else:
             return False
-        filenames = ['.files/temp/s.xls.xls', '.files/temp/p.xls.xls', '.files/temp/uchilishhe.xls.xls']
         files: List[Reader] = [Reader(f'{file}x') for file in filenames]
         for i in range(len(NAMES_TIMETABLE_SOURCE.keys())):
             start_from = 0
