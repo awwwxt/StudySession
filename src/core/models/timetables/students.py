@@ -15,7 +15,6 @@ class StudentsParser(ABC):
         lessons: List[int],
         ext: bool = False
     ) -> Dict[int, Dict[str, None]]:
-
         result = {i: {
             "LessonName": None,
             "Teacher": None,
@@ -25,8 +24,8 @@ class StudentsParser(ABC):
         lessons2week = [i + 2 for i in lessons]
         cabinets, teachers = self._GetRows(lessons, True), self._GetRows(items = lessons)
         cabinets2week, teachers2week = self._GetRows(lessons2week, True), self._GetRows(lessons2week)
-
         for i in range(6):
+            
             lesson = self._GetRow(cell, lessons[i]).value, self._GetRow(cell, lessons2week[i]).value
             if not lesson == (None, None):
                 if week == 1:
@@ -48,9 +47,10 @@ class StudentsParser(ABC):
                                     self._GetRow(cell, cabinets[i]).value,
                                     lesson[0]
                             )
+
                     else:
-                        if self._IsTeacher(self._GetRow(cell, lessons2week[i]).value):
-                            result[i]["LessonName"] = lesson[1].split("ауд.")[0]
+                        if self._IsTeacher(self._GetRow(cell, teachers2week[i]).value):
+                            result[i]["LessonName"] = lesson[1].split("ауд.")[0] if "ауд." in lesson[1] else lesson[1]
                             if ext:
                                 result[i]["Teacher"], result[i]["Cabinet"] = self._DistributionData(
                                     self._GetRow(cell, teachers2week[i]).value,
@@ -59,13 +59,14 @@ class StudentsParser(ABC):
                             )
 
                         else:
-                            result[i]["LessonName"] = lesson[0].split("ауд.")[0]
-                            if ext:
-                                result[i]["Teacher"], result[i]["Cabinet"] = self._DistributionData(
-                                    self._GetRow(cell, teachers[i]).value,
-                                    self._GetRow(cell, cabinets[i]).value,
-                                    lesson[0]
-                            )
+                            if not lesson[0] is None:
+                                result[i]["LessonName"] = lesson[0].split("ауд.")[0]
+                                if ext:
+                                    result[i]["Teacher"], result[i]["Cabinet"] = self._DistributionData(
+                                        self._GetRow(cell, teachers[i]).value,
+                                        self._GetRow(cell, cabinets[i]).value,
+                                        lesson[0]
+                                )
         return result
 
 
@@ -89,7 +90,13 @@ class StudentsParser(ABC):
                 if self._IsCab(cabinet):
                     teacher = "Не удалось найти"
                 else:
-                    teacher, cabinet = cabinet.split("ауд.")
+                    
+                    cabinet = cabinet.split("ауд.")
+                    if len(cabinet) == 2:
+                        cabinet = cabinet[1]
+                        teacher = cabinet[0]
+                    else:
+                        cabinet = cabinet[0]
             else:
                 teacher, cabinet = ["Не удалось найти" for _ in range(2)]
         if not cabinet is None:

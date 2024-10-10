@@ -2,7 +2,7 @@ from web.web import SocketRoute, dispatcher
 from core.models import SetGroup, SetExt, SetImage, SetMail, SetName, SetBackColor, SetFontColor, SetPrivacy, \
                         SetAlign, SetFont, SetTimeTimetable, SetMailingChat, SetStatusChat, SetLinkChat, \
                             SetGroupChat, CreateChat, DeleteChat
-from core.tools import GetFonts, colors, sync_to_async
+from core.tools import get_fonts, colors, sync_to_async
 from core.database import Router
 
 from typing import Dict
@@ -56,19 +56,19 @@ async def setmailingchat(token: str, params: SetMailingChat) -> str:
     return dispatcher.generate_answer(result = await Router.setMailingChat(params.chat_id, params.mailing))
 
 @SocketRoute.on_message(target="SetStatusChat", private = True)
-async def setmailingchat(token: str, params: SetStatusChat) -> str:
+async def setstatyschat(token: str, params: SetStatusChat) -> str:
     return dispatcher.generate_answer(result = await Router.setStatusChat(params.chat_id, params.opened))
 
 @SocketRoute.on_message(target="SetLinkChat", private = True)
-async def setmailingchat(token: str, params: SetLinkChat) -> str:
+async def setlinkchat(token: str, params: SetLinkChat) -> str:
     return dispatcher.generate_answer(result = await Router.setLinkChat(params.chat_id, params.link))
 
 @SocketRoute.on_message(target="SetGroupChat", private = True)
-async def setmailingchat(token: str, params: SetGroupChat) -> str:
+async def setgroupchat(token: str, params: SetGroupChat) -> str:
     return dispatcher.generate_answer(result = await Router.setGroupChat(params.chat_id, params.group))
 
 @SocketRoute.on_message(target="CreateChat", private = True)
-async def setmailingchat(token: str, params: CreateChat) -> str:
+async def createchat(token: str, params: CreateChat) -> str:
     return dispatcher.generate_answer(result = await Router.NewChat(
         params.creator_id, params.chat_id, params.group
     ))

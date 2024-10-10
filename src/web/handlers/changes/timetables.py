@@ -30,12 +30,12 @@ async def createshortday(token: str, params: CreateShortDay) -> str:
 
 @SocketRoute.on_message(target="CreateHomework", private = True)
 async def createhomework(token: str, params: CreateHomework) -> str:
+    logger.info(f"created homework, {params.name_lesson}, by {params.user_id} for {params.group}")
     return dispatcher.generate_answer(result = await Router.createHomework(
         params.user_id, params.num, params.name_lesson, params.group,
                 month = params.month, year = params.year, day = params.day,
                 teacher = params.teaher_name
     ))
-    logger.info(f"created homework, {params.name_lesson}, by {params.user_id} for {params.group}")
 
 @SocketRoute.on_message(target="DeleteHomework", private = True)
 async def deletehomework(token: str, params: DeleteHomework) -> str:
@@ -52,9 +52,9 @@ async def gethomeworks(token: str, params: GetHomeworks) -> str:
 
 @SocketRoute.on_message(target="CreateLesson", private = True)
 async def createlesson(token: str, params: CreateLesson) -> str:
+    logger.info(f"created lesson, {params.name_lesson}, by {params.user_id} for {params.group}")
     return dispatcher.generate_answer(result = await Router.createLessons(
         params.user_id, params.num, params.name_lesson, params.group,
                 month = params.month, year = params.year, day = params.day,
                 teacher = params.teaher_name
     ))
-    logger.info(f"created lesson, {params.name_lesson}, by {params.user_id} for {params.group}")

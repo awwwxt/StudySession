@@ -11,7 +11,7 @@ from PIL import (
     ImageFont
 )
 
-def GetFonts() -> List[str]:
+def get_fonts() -> List[str]:
     return listdir(FONTS)
 
 colors = dict(

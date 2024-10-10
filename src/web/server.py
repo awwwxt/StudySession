@@ -26,7 +26,7 @@ class WebServer(BaseTCPServer):
                     break
                 logger.info(f"Received {len(data)} bytes from {addr}")
                 try:
-                    response = await dispatcher.dispatch(loads(data.decode()))
+                  response = await dispatcher.dispatch(loads(data.decode()))
                 except BadParams:
                     response = dispatcher.generate_answer(False, reason="Invalid params")
                 except:

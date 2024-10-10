@@ -3,11 +3,8 @@ from core.models import GetUser, GetClassmates, GetHelpers, \
                  GetMailingTime, GetAllUser, GetKeysByID, GetKeys, \
                         GetChat, GetColors, GetFonts, GetMailingChat
 from core.database import Router
-from core.akvt.update import reupdate
+from core.tools import colors, get_fonts
 
-from typing import Dict
-from os import execv
-from sys import argv, executable
 from datetime import datetime
 
 @SocketRoute.on_message(target="GetUser", private = True)
@@ -34,6 +31,7 @@ async def gethelpers(token: str, params: GetHelpers) -> str:
 
 @SocketRoute.on_message(target="GetMailingTime", private = True)
 async def getmailingtime(token: str, params: GetMailingTime) -> str:
+    result = await Router.getMailingUsers(params.time)
     return dispatcher.generate_answer(result = await Router.getMailingUsers(params.time))
 
 @SocketRoute.on_message(target="GetAllUser", private = True)
@@ -82,7 +80,7 @@ async def getfontcolors(token: str, params: GetColors) -> str:
 
 @SocketRoute.on_message(target="GetFonts", private = True)
 async def getfonts(token: str, params: GetFonts) -> str:
-    return dispatcher.generate_answer(result = GetFonts())
+    return dispatcher.generate_answer(result = get_fonts())
 
 @SocketRoute.on_message(target="GetMailingChat", private = True)
 async def getfonts(token: str, params: GetMailingChat) -> str:

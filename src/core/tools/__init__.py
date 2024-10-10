@@ -1,4 +1,3 @@
-from .converter import xls2xlsx
 from .dates import (
     GetCurrentMonth, 
     GetDatesOfWeek,
@@ -19,5 +18,5 @@ from .misc import (
     check_link
 )
 from .generators import GenCellName, CreateCode
-from .images import GetFonts, DrawPNG, colors
+from .images import get_fonts, DrawPNG, colors
 from .markdown import GetMarkdown

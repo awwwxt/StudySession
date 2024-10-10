@@ -13,17 +13,13 @@ class ExcelReader(ABC):
         self.__workbook__ = load_workbook(file)
         self.__sheet__ = self.__workbook__.active
         counter: int = 3
-        counter_down: int = 9
         while True:
             cell_name = GenCellName(counter)
             counter += 1
-            group = self._GetRow(cell_name, counter_down).value
+            group = self._GetRow(cell_name, 9).value
             
             if group is None:
-                if self._DetectBorder(cell_name, counter_down):
-                    break
-                else:
-                    counter_down += 1; counter = 3            
+               break
             else:
                 group = group.strip().upper()
                 if not group in ("ЧАСЫ", "ДНИ"):
@@ -38,8 +34,7 @@ class ExcelReader(ABC):
     @abstractmethod
     @lru_cache(maxsize=BordersCache)
     def _DetectBorder(self, column: Union[str, int], row: int) -> bool:
-            return True if not self._GetRow(column, row).border.bottom.style \
-                                                 is None else False
+        ...
 
     @property
     def groups(self) -> Dict[str, str]:

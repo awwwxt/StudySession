@@ -39,9 +39,9 @@ async def handletimetables(token: str, params: Parser) -> str:
             if params.in_format == "markdown":
                 result = result.toMarkDown()
             elif params.in_format == "list":
-                result = result._toText(True).split("\n")
+                result = result.toArray
             else:
-                result = result._toText(params.only_timetables)
+                result = result.toPlain()
         result = dispatcher.generate_answer(result = result)
     else:
         result = dispatcher.generate_answer(False, reason = "only teachers/students allowed")
@@ -71,7 +71,7 @@ async def handlerchanges(token: str, params: Changes) -> str:
         results = await fetch_data(requests)
         
         for (new_response, old_response), date in zip(results, dates):
-            new, old = new_response._toText(), old_response._toText()
+            new, old = new_response.toPlain(), old_response.toPlain()
             if new != old:
                 diffbuffer.append(f"{date.day}-{date.month}-{date.year}\n\nБыло:\n{old}\n\nСтало:\n{new}\n\n")
         
@@ -103,7 +103,7 @@ async def handleronweek(token: str, params: OnWeekParser) -> str:
             if params.in_format == "markdown":
                 result = result.toMarkDown()
             else:
-                result = result._toText(params.only_timetables)
+                result = result.toPlain()
             buff += f"{result}\n\n"
         result = dispatcher.generate_answer(result = buff)
     else:

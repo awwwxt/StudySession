@@ -1,5 +1,5 @@
 from core.database import Router
-from config import logger, SimmetricHashFunc, APITOKEN
+from config import logger, APITOKEN
 from core.tools import check_on_symbols
 from core import models
 

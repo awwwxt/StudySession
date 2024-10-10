@@ -1,5 +1,6 @@
 from core.http import Client
 from core.tools.dates import GetCurrentMonth
+from core.errors import ClientError
 from config import (
     TEMP, 
     logger,
@@ -9,10 +10,12 @@ from config import (
 
 from fake_useragent import UserAgent; useragent = UserAgent()
 
-from typing import Any, Tuple, List, Dict
+from typing import Any, Tuple, List, Dict, Union
 from aiohttp import ClientSession, ClientResponse
+
 from bs4 import BeautifulSoup
 from asyncio import gather
+import aiofiles
 
 class Parser(Client):
     def __init__(self, **kwargs: Any):
@@ -23,52 +26,49 @@ class Parser(Client):
             "User-Agent": useragent.random
         }
 
-    async def __create_response__(self, **kwargs) -> ClientResponse:
-        try:
-            async with ClientSession(timeout = self.timeout) as session:
-                async with session.get(**kwargs) as response:
-                    if response.status == 200:
-                        return await response.content.read()
-        except Exception as error:
-           logger.error(f"{self.__class__.__name__}: {error}")
+    async def create_request(self, **kwargs) -> Union[bytes, None]:
+        for _ in range(MAX_DOWNLOAD_ATTEMPS):
+            async with ClientSession() as session:
+                try:
+                    async with session as response:
+                        response = await session.get(**kwargs) 
+                        if response.status == 200:
+                            return await response.read()
+                        else:
+                            raise ClientError(status = response.status, url = kwargs.get("url"))
+                except Exception as error:
+                    raise ClientError(url = kwargs.get("url"), error = error)
+        return None
 
     def ParseLinks(self, page: str) -> Dict[str, str]:
-        soup = BeautifulSoup(page.decode(), 'lxml')
+        soup = BeautifulSoup(page, 'lxml')
         result = {}
         for link in soup.find_all("a", href = True):
-            link: str = link.get("href")
-            if link.endswith(".xls") and str(GetCurrentMonth()) in link:
+            link = link.get("href")
+            if link.endswith(".xls"):
                 for key, value in NAMES_TIMETABLE_SOURCE.items():
                     if any(val in link for val in value):
                         result[key] = link
         return result     
 
-    async def get(self) -> Any:
-        return await self._start()
-
     async def download(self, url: str, save_as: str) -> bool: 
-        try:
-            request = await self.__create_response__(url = url)
-            if request:
-                with open(save_as, "wb") as file:
-                    file.write(request)
-                    logger.success(f"{self.__class__.__name__} -> saved at {url} {save_as}")
-                    return True
-            return False
-        except Exception as error:
-            logger.error(f"{self.__class__.__name__}: {error}")
+        request = await self.create_request(url = url)
+        if request:
+            async with aiofiles.open(save_as, "wb") as file:
+                await file.write(request)
+            logger.success(f"{self.__class__.__name__} -> saved {url} at {save_as}")
+            return True
+        return False
 
-    async def __download_demon(self, url: str, file: int) -> None:
+    async def get(self) -> Tuple[List[str], List[str], List[str]]:
         for _ in range(MAX_DOWNLOAD_ATTEMPS):
-            if await self.download(url, file):
-                return True
-            
-        logger.error(f"{self.__class__.__name__}: cannot fetch {file} from {url}")
+            response = await self.create_request(url = self.url)  
 
-    async def _start(self) -> Tuple[List[str], List[str]]:
-        links = self.ParseLinks(await self.__create_response__(url = self.url))
-        files = list(map(lambda targ: f"{TEMP}{targ}.xls", links.keys()))
-        for result in await gather(*[self.__download_demon(url, files[index]) for index, url in enumerate(links.values())]):
-            if not result:
-                return
-        return files
+            if response:
+                links = self.ParseLinks(response.decode())
+
+                files = list(map(lambda targ: f"{TEMP}{targ}.xls", links.keys()))
+                result = await gather(*[self.download(url, files[index]) for index, url in enumerate(links.values())])
+                if not None in result and len(result) == len(NAMES_TIMETABLE_SOURCE.keys()):
+                    return files
+        raise ClientError(error = "Cannot download all documents, unknown error")

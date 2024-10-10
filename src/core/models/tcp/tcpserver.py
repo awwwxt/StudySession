@@ -23,7 +23,7 @@ class BaseTCPServer(ABC):
             ssl = self.load_context((f'{KEYS}cert.pem', f'{KEYS}key.pem'))
         )
         ip = server.sockets[0].getsockname()
-        logger.success(f"Starting at {ip}")
+        logger.success(f"Starting TCP at {ip[0]}:{ip[1]}")
 
         async with server:
             await server.serve_forever()

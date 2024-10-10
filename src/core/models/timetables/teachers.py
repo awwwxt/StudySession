@@ -3,6 +3,10 @@ from config import (
     TeacherCache, 
     DDoSCache, 
     Cache, 
+    ROW1,
+    ROW2,
+    ROW4,
+    ROW3,
     MAX_TEACHER_NAME_LEN,
     MIN_TEACHER_NAME_LEN 
 )
@@ -31,8 +35,8 @@ class TeachersParser(ABC):
                     index = self._getIndexTeachers(temp2_row, lessons[0])
                     if temp_row > 14:
                         temp_row = temp_row - (4 * ((temp_row - 14) // 4 + 1))
-                    if (week == 1 and not self._DetectBorder(cell.column - 1, cell.row - 1)) or (week == 2 and temp_row in (11, 12) and not self._DetectBorder(cell.column - 1, cell.row)): 
-                        if temp_row == 11:
+                    if (week == 1 and not self._DetectBorder(cell.column - 1, cell.row - 1)) or (week == 2 and temp_row in (ROW2, ROW3) and not self._DetectBorder(cell.column - 1, cell.row)): 
+                        if temp_row == ROW2:
                             lesson = self._GetRow(cell.column - 1, cell.row - 1).value
                             if self._IsLesson(lesson):
                                 result[index]["LessonName"] = lesson
@@ -45,7 +49,7 @@ class TeachersParser(ABC):
                             if result[index]["Cabinet"] is None:
                                 cab = self._GetRow(cell.column - 1, cell.row + 1).value
                                 result[index]["Cabinet"] = cab if self._IsCab(cab) else self._GetRow(cell.column - 1, cell.row + 2).value
-                        elif temp_row == 12:
+                        elif temp_row == ROW3:
                             if not self._GetRow(cell.column - 1, cell.row - 1).value == cell.value:
                                 if self._IsTeacher(cell.value):
                                     result[index]["Cabinet"], result[index]["Teacher"] = self._GetRow(cell.column - 1, cell.row + 1).value, cell.value
@@ -56,7 +60,7 @@ class TeachersParser(ABC):
                                 if not self._IsCab(result[index]["Cabinet"]): self._GetRow(cell.column - 1, cell.row + 2).value
                                 result[index]["LessonName"] = self._GetRow(cell.column - 1, cell.row - 2).value
                     elif week == 2 and self._DetectBorder(cell.column - 1, cell.row - 1):
-                        if temp_row in (12, 13):
+                        if temp_row in (ROW3, ROW4):
                             lesson = self._GetRow(cell.column - 1, cell.row - 1).value
                             if self._IsTeacher(cell.value):
                                 result[index]["Teacher"] = cell.value

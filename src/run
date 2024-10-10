@@ -1,0 +1,34 @@
+#!/bin/bash
+
+iptables -F
+iptables -X
+
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+
+iptables -A OUTPUT -j ACCEPT
+
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A INPUT -p tcp --syn -m connlimit --connlimit-above 25 -j REJECT
+iptables -A INPUT -p tcp --syn -m recent --set
+iptables -A INPUT -p tcp --syn -m recent --update --seconds 60 --hitcount 25 -j DROP
+
+iptables -A INPUT -p tcp --syn -m conntrack --ctstate NEW -j ACCEPT
+
+iptables -A INPUT -p tcp -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -p tcp -m conntrack --ctstate TIME_WAIT -j DROP
+iptables -A INPUT -p tcp ! --syn -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -p tcp --tcp-flags ACK ACK -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 2222 -j ACCEPT
+
+iptables -A INPUT -p tcp --dport 9999 -j ACCEPT
+
+iptables -A INPUT -p tcp --tcp-flags ACK ACK -m limit --limit 1000/sec --limit-burst 10000 -j ACCEPT
+
+iptables -A INPUT -j DROP

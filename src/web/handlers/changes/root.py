@@ -3,11 +3,9 @@ from core.models import NewUser, DeleteUser, ActivateKey, RemoveRole, \
                              CreateInviteKey, DeleteKey, RequestUpdate, RemoveInvited
 from core.database import Router
 
-from typing import Dict
 from os import execv
-from core.akvt.update import reupdate
+from core.akvt.update import Updater
 from sys import argv, executable
-from datetime import datetime
 
 @SocketRoute.on_message(target="NewUser", private = True)
 async def newuser(token: str, params: NewUser) -> str:
@@ -35,7 +33,8 @@ async def deletekey(token: str, params: DeleteKey) -> str:
 
 @SocketRoute.on_message(target="RequestUpdate", private = True)
 async def requestupdate(token: str, params: RequestUpdate) -> str:
-        if await reupdate():
+        updater = Updater()
+        if await updater.start():
             execv(executable, [executable, argv[0]] + argv[1:])  
         else:
             return dispatcher.generate_answer(False, reason = "Unknown error")

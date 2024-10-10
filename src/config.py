@@ -1,7 +1,7 @@
 from string import ascii_letters, ascii_lowercase, ascii_uppercase
-from loguru import logger
 from datetime import datetime
-from hashlib import sha512
+
+from loguru import logger
 
 DefaultTimeLessons = (
     "8.30 - 10.05",
@@ -45,7 +45,7 @@ AccessLevels = list(range(5))
 StartDate = datetime(year=2024, month=2, day=19) 
 
 DATABASE = ".files/ssb/database.sqlite"
-TIMETABLES = ".files/ssb/timetables/"
+TIMETABLES = ".files/ssb/"
 IMAGES = ".files/images/"
 FONTS = ".files/fonts/"
 TEMP = ".files/temp/"
@@ -53,8 +53,6 @@ LOGGER = ".files/ssb/ssb.log"
 KEYLIST = ascii_letters + ascii_lowercase + ascii_uppercase
 CELLLIST = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 KEYS = ".files/keys/"
-
-SimmetricHashFunc = lambda data: sha512(str(data).encode()).hexdigest()
 
 DefaultCacheSize = 512
 Cache = 64
@@ -66,19 +64,33 @@ DDoSCache = 1024
 StundetsBuildCache = 64
 TeachersBuildCache = StundetsBuildCache / 4
 
+LOGS_SIZE = "10MB"
+
 HTTP_TIMEOUT = 5.0
 
 X, Y = [10 for _ in range(2)]
 SCALING_Y, SCALING_X = 25, 10
 
 TCP_PORT = 9999
-TCP_IP = "0.0.0.0"
+TCP_IP = "127.0.0.1"
 MAX_BUFFER_LENGHT = 8196
 
 MAX_TEACHER_NAME_LEN = 20
+MAX_TEACHER_NAME_UNIQUE_LEN = MAX_TEACHER_NAME_LEN - 2
 MIN_TEACHER_NAME_LEN = 5
+MAX_LESSON_LEN = 20
+MIN_LESSON_LEN = 3
+
 MAX_GROUP_LEN = 8
 MIN_GROUP_LEN = 3
+
+DEFAULT_BUFF_SIZE = 6
+
+ROW1 = 11
+ROW2 = 12
+ROW3 = 13
+ROW4 = 14
+ROW5 = 15
 
 ALLOWED_ALIGNS = "right", "left", "center"
 
@@ -90,7 +102,7 @@ NAMES_TIMETABLE_SOURCE = {
     "uchilishhe.xls": ("bolshoe-raspisanie-uchilishhe", )
 }
 
-MAX_DOWNLOAD_ATTEMPS = 10
+MAX_DOWNLOAD_ATTEMPS = 3
 
 MAX_ATTEMPS = 3
 
@@ -99,5 +111,6 @@ APITOKEN = ""
 logger.add(
     sink = LOGGER,
     level = "INFO",
-    format = "SSB | DATE {time:MMMM D, YYYY > HH:mm:ss} | {level} | ACTION -> {message}"
+    format = "{time:MMMM D, YYYY > HH:mm:ss} | <{level}> x <{message}>",
+    rotation = LOGS_SIZE
 )

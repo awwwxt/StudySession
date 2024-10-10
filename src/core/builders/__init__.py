@@ -1,2 +1,1 @@
-from .students import BuildResultForStudents
-from .teachers import BuildResultForTeachers
+from .base import BuilderTable

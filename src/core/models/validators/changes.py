@@ -1,6 +1,6 @@
 ﻿from core.errors import BadParams
 from core.tools import check_group, check_lesson
-from core.tools import colors, GetFonts
+from core.tools import colors, get_fonts
 from config import TIMES, ALLOWED_ALIGNS
 
 from pydantic import BaseModel, validator
@@ -85,7 +85,7 @@ class SetFont(BaseModel):
 
     @validator("font")
     def check_font(cls, value):
-        if value in GetFonts():
+        if value in get_fonts():
             return value
         raise BadParams("validation missed font parameter")
 

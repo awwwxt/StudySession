@@ -22,7 +22,7 @@ class SetMailingChat(BaseModel):
     @validator('mailing')
     def check_time(cls, value):
         if value in TIMES:
-            return True
+            return value
         raise BadParams("validation missed mailing parameter")
 
 class SetStatusChat(BaseModel):
@@ -70,5 +70,5 @@ class GetMailingChat(BaseModel):
     @validator('time')
     def check_time(cls, value):
         if value in TIMES:
-            return True
+            return value
         raise BadParams("validation missed time parameter")

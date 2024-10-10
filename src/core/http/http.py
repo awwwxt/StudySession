@@ -16,7 +16,7 @@ class Client:
         return choice(self._proxy)
 
     @abstractmethod
-    async def __create_response__(self, **kwargs) -> ClientResponse:
+    async def create_request(self, **kwargs) -> ClientResponse:
         ...
 
     @abstractmethod

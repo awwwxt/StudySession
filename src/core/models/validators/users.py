@@ -28,7 +28,7 @@ class ActivateKey(BaseModel):
     @validator('key')
     def check_key(cls, value):
         if check_on_symbols(value):
-            return True
+            return value
         raise BadParams("validation missed key parameter")
 
 class RemoveRole(BaseModel):
@@ -40,7 +40,7 @@ class GetMailingTime(BaseModel):
     @validator('time')
     def check_time(cls, value):
         if value in TIMES:
-            return True
+            return value
         raise BadParams("validation missed time parameter")
 
 
@@ -66,7 +66,7 @@ class DeleteKey(BaseModel):
     @validator('key')
     def check_key(cls, value):
         if check_on_symbols(value):
-            return True
+            return value
         raise BadParams("validation missed key parameter")
 
 class GetKeysByID(BaseModel):

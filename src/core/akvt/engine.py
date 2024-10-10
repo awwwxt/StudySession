@@ -1,23 +1,25 @@
 from core.tools import (
     GetWeek,
-    GetDayOfWeek,
-    datesConstructor
+    GetDayOfWeek
 )
 from config import ShortTimeLessons, DefaultTimeLessons
 from config import (
     TIMETABLES, 
     Cache, 
     LessonCells,
-    BordersCache
+    BordersCache,
+    MAX_TEACHER_NAME_LEN,
+    MIN_TEACHER_NAME_LEN,
+    MAX_LESSON_LEN,
+    MAX_TEACHER_NAME_UNIQUE_LEN
 )
 from core.errors.exceptions import StudySessionError
 from core.models import StudentsParser, TeachersParser
 from core.models.reader import ExcelReader
 from core.database import Router
-from core.builders import BuildResultForStudents, BuildResultForTeachers
+from core.builders import BuilderTable
 
-from concurrent.futures import ThreadPoolExecutor
-from asyncio import gather, get_event_loop
+from asyncio import gather
 from typing import Union, List, Optional
 from functools import lru_cache
 
@@ -31,12 +33,12 @@ class Engine(ExcelReader, TeachersParser, StudentsParser):
                   name: Optional[str] = None,
                   force_disable_time: Optional[bool] = False,
                   **kwargs: int
-                ):
+                ) -> BuilderTable:
         num_day, name_week = GetDayOfWeek(**kwargs)
         if num_day <= (len(LessonCells) - 1) and method in ("teachers", "students"):
             lessons = LessonCells[num_day]  
         else:
-            raise StudySessionError()
+            raise StudySessionError(message = "Нельзя получить расписание на воскресенье", is_warning = True)
         user = await Router.getUser(user_id)
         if method == "students":
             if group is None:
@@ -44,32 +46,35 @@ class Engine(ExcelReader, TeachersParser, StudentsParser):
             group_in_excel = self.groups[group]
         week = GetWeek(**kwargs)
     
-        tasks = [
-            Router.getHomeworks(group, **kwargs), 
-            Router.getLessons(group, **kwargs),
-            Router._checkShortDay(group, **kwargs)
-            ]
+        tasks = [Router._checkShortDay(group, **kwargs)]
+
         if method == "students":
-            user = await Router.getUser(user_id)
+            tasks.append(Router.getHomeworks(group, **kwargs)), 
+            tasks.append(Router.getLessons(group, **kwargs)),
             tasks.append(self._SearchStudents(group_in_excel, week, lessons, user.EnableExtentedFormatInTimetable))
-            homeworks, _lessons, short_day, result = await gather(*tasks)
-            return BuildResultForStudents(data = {"day": name_week, "time": self._getTime(short_day, user.EnableTimeInTimetable, force_disable_time), "week": week, \
-                            "lessons": result, "homeworks": homeworks, "edited_lesons": _lessons}, 
-                                        user_id = user_id)
+            short_day, homeworks, edited_lessons, result = await gather(*tasks)
+
         elif method == "teachers":
             tasks.append(self._SearchTeachers(name, week, lessons))
-            homeworks, _lessons, short_day, result = await gather(*tasks) 
-            _meta = {i: {"Lesson": None, "Homework": None} for i in range(6)}
-            for i in range(6):
-                _meta[i]["Homework"], _meta[i]["Lesson"] = await gather(*[
-                                        Router.getHomework(name, i , **kwargs),
-                                        Router.getLesson(name, i, **kwargs)
-                                    ])
+            short_day, result = await gather(*tasks)
 
-            return BuildResultForTeachers(data = {"lessons": result, "day": name_week,\
-                                "week": week, "time": self._getTime(short_day, user.EnableTimeInTimetable, force_disable_time), \
-                                                    "meta": _meta, "date": datesConstructor(**kwargs)}, 
-                                                    user_id = user_id)
+            homeworks, edited_lessons = {}, {}
+            for i in range(6):
+                homeworks[i], edited_lessons[i] = await gather(*[
+                            Router.getHomework(name, i , **kwargs),
+                            Router.getLesson(name, i, **kwargs)
+                        ])
+
+        return BuilderTable(
+                    day = name_week,
+                    time = self._getTime(short_day, user.EnableTimeInTimetable, force_disable_time),
+                    week = week,
+                    disable_time = force_disable_time,
+                    lessons = result,
+                    homeworks = homeworks,
+                    edited_lessons = edited_lessons,
+                    user_id = user.UserID
+                )
 
     @staticmethod
     @lru_cache(maxsize = Cache)
@@ -85,14 +90,15 @@ class Engine(ExcelReader, TeachersParser, StudentsParser):
             return False
         if "ауд." in name:
             return False
-        return len(name) in range(6, 10) and name.count(".") >= 1 and name[-2] == "." 
+        return (MIN_TEACHER_NAME_LEN <= len(name) <= MAX_TEACHER_NAME_LEN or len(set(name)) < MAX_TEACHER_NAME_UNIQUE_LEN) and \
+                                             name.count(".") >= 1 
 
     @staticmethod
     @lru_cache(maxsize = Cache)
     def _IsCab(obj: Optional[str]) -> bool:
         if obj is None:
             return False
-        return len(obj) in (7, 6, 8) and obj.count(".") in (0, 1) and "ауд" in obj
+        return MIN_TEACHER_NAME_LEN <= len(obj) <= MAX_LESSON_LEN and obj.count(".") in (0, 1) and "ауд" in obj
 
     @lru_cache(maxsize = BordersCache)
     def _DetectBorder(self, column: Union[str, int], row: int) -> bool:
@@ -104,4 +110,4 @@ class Engine(ExcelReader, TeachersParser, StudentsParser):
     
     @staticmethod
     def _GetRows(items: List[int], is_cab: Optional[bool] = False) -> List[int]:
-        return [item + (3 if is_cab else 1) for item in items]
+        return [item + (2 if is_cab else 1) for item in items]
