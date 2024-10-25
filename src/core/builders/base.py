@@ -24,7 +24,7 @@ class BuilderTable:
         self.week = week
         self.user_id = user_id
         for i in range(buff_size):
-            string = time[i] if not disable_time and time else f"[{i + 1}]"
+            string = f"[{time[i]}]" if not disable_time and time else f"[{i + 1}]"
             if not i in edited_lessons or (edited_lessons and i in edited_lessons and edited_lessons[i] is None):
                 if lessons[i]["LessonName"] or ("Cabinet" in lessons[i] and not lessons[i]["Cabinet"] is None):
                     if disable_time:

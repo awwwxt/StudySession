@@ -7,6 +7,7 @@ from config import (
     ROW2,
     ROW4,
     ROW3,
+    ROW5,
     MAX_TEACHER_NAME_LEN,
     MIN_TEACHER_NAME_LEN 
 )
@@ -27,15 +28,15 @@ class TeachersParser(ABC):
         week: int, 
         lessons: List[int],
     ) -> Dict[str, Dict[int, str]]:
-        result = {i: {"Group": None, "Teacher": None, "Cabinet": None, "LessonName": None} for i in range(6)}
+        result = {i: {"LessonName": None, "Cabinet": None, "Group": None, "Teacher": None} for i in range(6)}
         for row in self.__sheet__.iter_rows(min_row = lessons[0], max_row = lessons[5]):
             for cell in row:
                 if not cell.value is None and name in cell.value:
                     temp2_row, temp_row = self._downRowTeachers(cell.row)
                     index = self._getIndexTeachers(temp2_row, lessons[0])
-                    if temp_row > 14:
-                        temp_row = temp_row - (4 * ((temp_row - 14) // 4 + 1))
-                    if (week == 1 and not self._DetectBorder(cell.column - 1, cell.row - 1)) or (week == 2 and temp_row in (ROW2, ROW3) and not self._DetectBorder(cell.column - 1, cell.row)): 
+                    if temp_row > ROW5:
+                        temp_row = temp_row - (4 * ((temp_row - ROW5) // 4 + 1))
+                    if week == 1 or (week == 2 and temp_row in (ROW2, ROW3) and not self._DetectBorder(cell.column - 1, cell.row)): 
                         if temp_row == ROW2:
                             lesson = self._GetRow(cell.column - 1, cell.row - 1).value
                             if self._IsLesson(lesson):
@@ -49,7 +50,7 @@ class TeachersParser(ABC):
                             if result[index]["Cabinet"] is None:
                                 cab = self._GetRow(cell.column - 1, cell.row + 1).value
                                 result[index]["Cabinet"] = cab if self._IsCab(cab) else self._GetRow(cell.column - 1, cell.row + 2).value
-                        elif temp_row == ROW3:
+                        elif temp_row == ROW3 and not self._DetectBorder(cell.column - 1, cell.row - 1):
                             if not self._GetRow(cell.column - 1, cell.row - 1).value == cell.value:
                                 if self._IsTeacher(cell.value):
                                     result[index]["Cabinet"], result[index]["Teacher"] = self._GetRow(cell.column - 1, cell.row + 1).value, cell.value
@@ -99,13 +100,13 @@ class TeachersParser(ABC):
         if row > 35:
             row = row - (25 * ((row - 35) // 25 + 1))
         temp_row = row
-        if temp_row > 14:
-            temp_row = temp_row - (4 * ((temp_row - 14) // 4 + 1))
+        if temp_row > ROW5:
+            temp_row = temp_row - (4 * ((temp_row - ROW5) // 4 + 1))
         return row, temp_row
 
     @lru_cache(maxsize = Cache)
     def _getIndexTeachers(self, row: int, lessons: int) -> int:
-        if lessons > 14:
+        if lessons > ROW5:
             lessons = self._downRowTeachers(lessons)
             if isinstance(lessons, tuple):
                 lessons = lessons[1]

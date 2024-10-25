@@ -53,6 +53,9 @@ LOGGER = ".files/ssb/ssb.log"
 KEYLIST = ascii_letters + ascii_lowercase + ascii_uppercase
 CELLLIST = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 KEYS = ".files/keys/"
+BACKGROUNDS = ".files/backgrounds/"
+
+ENABLE_BACKGROUNDS = False
 
 DefaultCacheSize = 512
 Cache = 64

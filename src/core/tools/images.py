@@ -1,7 +1,7 @@
-from config import FONTS, X, Y, SCALING_X, SCALING_Y
-from core.tools import sync_to_async
+from config import FONTS, X, Y, SCALING_X, SCALING_Y, BACKGROUNDS
 from core.database import Router
 
+from random import choice
 from os import listdir
 from typing import List
 from io import BytesIO
@@ -14,6 +14,9 @@ from PIL import (
 def get_fonts() -> List[str]:
     return listdir(FONTS)
 
+def get_background() -> str:
+    return BACKGROUNDS + choice(listdir(BACKGROUNDS))
+
 colors = dict(
         red = '🔴', yellow = '🟡', 
         blue = '🔵', orange = '🟠', 
@@ -21,25 +24,30 @@ colors = dict(
         black = '⚫', green = "🟢"
     )
 
-async def DrawPNG(text: str, user_id: int) -> bytes:
+async def DrawPNG(text: str, user_id: int, font_size: int = 18) -> bytes:
     user = await Router.getUser(user_id)
     img_byte_array = BytesIO()
+    color = get_background()
+    print(color)
+    background = Image.open(color).convert('RGBA')
+    max_line_length = len(max(text.split("\n"), key=len))
+    num_lines = len(text.split("\n"))
+    image_size = (max_line_length * SCALING_X + X, num_lines * SCALING_Y + Y)
+    background = background.resize(image_size, Image.LANCZOS)
     
-    image = Image.new(
-        mode = 'RGB', 
-        size = (
-             len(max(text.split("\n"), key = len)) * SCALING_X + X,
-             len(text.split("\n")) * SCALING_Y + Y
-            ), 
-        color = user.BackgroundColorForImage)
-    
+    combined_image = Image.new('RGBA', image_size)
+    combined_image.paste(background, (0, 0))  
+
+    image = Image.new('RGBA', image_size, (0, 0, 0, 0))  
     draw = ImageDraw.Draw(image)
-    draw.text(
-        xy = (X, Y), 
-        text = text, 
-        fill = user.FontColorForImage, 
-        font = ImageFont.truetype(f'{FONTS}{user.FontNameForImage}', 18, encoding='utf-8'), 
-        align = user.AlignTextForImage)
+    font = ImageFont.truetype(f'{FONTS}{user.FontNameForImage}', font_size, encoding='utf-8')
+
+    for index, line in enumerate(text.split("\n")):
+        draw.text((X, Y + index * SCALING_Y), line, fill=user.FontColorForImage, font=font)
+
+    combined_image.paste(image, (0, 0), mask=image)  
+    combined_image.save(img_byte_array, format='PNG')
     
-    image.save(img_byte_array, format='PNG')
     return img_byte_array.getvalue()
+
+
